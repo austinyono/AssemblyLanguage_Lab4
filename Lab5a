@@ -1,0 +1,91 @@
+.data
+#Program Description: Array, print integers in reverse
+#Author: Austin Yono
+#Creation Date: 09/17/19
+input1: .asciiz "Enter the number of elements:\n"
+input2:	.asciiz "Enter a number: "
+output:	.asciiz "The content of array in reverse order is: "
+output2: .asciiz "\n"
+error1: .asciiz "ERROR: Array cannot have more than 10 elements, try again!!\n"
+error2: .asciiz "ERROR: Array cannot have less than 1 element, try again!!\n"
+
+Array:	.word	0,0,0,0,0,0,0,0,0,0
+
+.text
+input:
+
+li $t5, 10 #stores 10 into t5
+	
+li $v0, 4 #prints string
+la $a0, input1 #prints enter number of elements
+syscall
+li $v0, 5 #gets user input
+syscall
+	
+add $t0, $v0, $0 #stores into t0
+add $t1, $v0, $0 #stores into t1	
+	
+ble $t0, $0, Error2  #goes to error message 2
+bgt $t0, $t5, Error1  #goes to error message1
+
+la $s0, Array
+	
+inputloop:
+beq $t0, $0, next #if complete go to next
+	
+li $v0, 4 #prompts user for input.
+la $a0, input2
+syscall
+li $v0, 5 #gets input from user.
+syscall	
+	
+sw $v0, 0($s0) #stores in array
+addi $s0, $s0, 4 #increments of 4 bc of bit size
+addi $t0, $t0, -1 #decreases t0 by 1 to go back into loop
+	
+j inputloop #goes back into loop
+
+next:
+
+li $v0, 4 #prints string
+la $a0, output #prints output message
+syscall
+j outputloop #goes directly into output loop
+
+	
+outputloop:
+
+beq $t1, $0, done #checks to see if loop is complete and if it is then goes to done
+
+addi $s0, $s0, -4 #decrements of 4 to output array in revers
+	
+li $v0, 4 #prints string
+la $a0, output2 #prints new line
+syscall
+
+li $v0, 1 #prints integer of array
+lw $a0, 0($s0) #prints s0 array in argument register
+syscall
+	
+addi $t1, $t1, -1  #goes back into loop and minus t1 by 1 until loop is complete 
+	
+j outputloop #jumps back into loop
+	
+done:
+
+li $v0, 10 #end of program
+syscall
+	
+Error1:	
+
+li $v0, 4		
+la $a0, error1 #prints error1 message
+syscall
+j input #goes back into input
+	
+Error2:
+
+li $v0, 4
+la $a0, error2 #prints error2 mesage
+syscall
+j input #goes back into input loop

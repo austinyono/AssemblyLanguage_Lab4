@@ -1,0 +1,126 @@
+#Program Description: Find Median
+#Author: Austin Yono
+#Date: 09.19.2019
+
+.data 
+array: .word 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0 
+msg1: .asciiz "Enter a number between 1 and 10 " 
+msg2: .asciiz "Enter number: "
+border: .asciiz "\n=======================================\n"
+msg3: .asciiz "Error array can't have more than 10 elements, try again!!\n"
+msg4: .asciiz "Error array needs to be a positive number, try aggain!!\n"
+median:.asciiz "The median is: "
+.text
+
+main: 
+	li $v0, 4 #string
+	la $a0, msg1 #element question
+	syscall 
+	
+	li $v0, 5 #user input
+	syscall 
+	
+	add $t0, $v0, 0 #first register that we will count for input 
+	add $t2, $v0, 0 #second register that we will reload and use when we find median 
+	
+	#load array
+	la $s0, array
+	
+	#load immediate registers 
+	li $t4, 0 #message counter, and checking if negative
+	li $t3, 2 #what we will device input to find median 
+	li $t5, 4 #multiply bytes
+	
+	li $t1, 10 #compare 11 > t0
+	li $t6, 1 #compare 0 < t0 
+	
+	#error messages
+	blt $t0, $t6, error2 #error if number is less than 0
+	bgt $t0, $t1, error1 #error if number is more than 11. bgt = greater than
+
+	li $v0, 4 #string
+	la $a0, border #output border
+	syscall 	
+	
+	
+inputLoop:
+	beq $t0, $0, findMed #when $t0 = 0, go to findMed 
+	
+	li $v0, 4 #string
+	la $a0, msg2 #enter number 
+	syscall 
+	
+	li $v0, 5 #ask for number for the element  
+	syscall 
+	
+	sw $v0, 0($s0) #stores integers in $s0 array
+	addi $s0, $s0, 4 #every 4 bytes
+	addi $t0, $t0, -1 #decrements $t0 by 1. 
+	
+	j inputLoop #jump to loop
+	
+findMed: 
+	div $t2, $t3 #device input by 2
+	
+	mfhi $s1 #stores remainder 
+	mflo $s2 #stores quotient 
+	
+	la $s0, array #loads array 
+	
+	mult $t5, $s2 #if the input is odd then multiply $s2 to 
+	mflo $s2 #move 
+	
+	add $s0, $s0, $s2 #counts bytes from s2 immidately to the top of the array
+	
+	lw $s4, 0($s0) #loads integer from array to $s4
+	
+	beq $s1, $0, even #remainder is 0m jump to 'even
+	
+	j print #jump to print
+	
+even:
+	
+	lw $s5, -4($s0) #place the value of array -4 bytes from the middle
+	add $s5, $s5, $s4 #sum = sum + array[i] adds, $s4 to $s5 
+	
+	div $s4, $s5, $t3 #divide $s5/2 then replace integer to $s4
+	sw $s4, 0($s0) #stores word in $s4
+	
+	j print #jump to print
+
+print:
+	li $v0, 4 #string
+	la $a0, border #load border
+	syscall 
+	
+	li $v0, 4 #string
+	la $a0, median #load median message
+	syscall 
+	
+	li $v0, 1 #integer
+	add $a0, $s4, $0 #outputs value in $s4
+	syscall
+	
+	li $v0, 4 #string
+	la $a0, border #load border
+	syscall 
+	
+	j exit #jump to exit
+	
+error1:
+	li $v0, 4 #code string
+	la $a0, msg3 #error that number is more than 10
+	syscall
+	
+	j main #go back to main to ask again
+
+error2:
+	li $v0, 4 #code string
+	la $a0, msg4 #error that number less than 0
+	syscall
+	
+	j main #go back to main to ask again 
+
+exit: 
+	li $v0, 10 #exit program
+	syscall
